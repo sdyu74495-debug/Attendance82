@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سِجِلّي (Sigily) - نظام تسجيل الحضور والأنشطة</title>
+    <title>لوحة تحكم الأدمن - سِجِلّي (Sigily)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -16,25 +16,15 @@
             font-family: 'Cairo', sans-serif;
             background-color: #f3f4f6;
         }
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800">
 
     <!-- Toast Notification Container -->
-    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 w-11/max-w-md max-w-md pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 w-11/12 max-w-md pointer-events-none"></div>
 
     <!-- Admin Supervisor Notification Banner -->
     <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-center text-xs font-bold tracking-wide shadow-inner flex items-center justify-center gap-2">
@@ -45,32 +35,49 @@
     <!-- Header Navigation -->
     <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('dashboard')">
+            <div class="flex items-center gap-3">
                 <div class="bg-white text-indigo-700 p-2 rounded-xl shadow-inner font-black text-xl">
-                    <i class="fa-solid fa-clipboard-question"></i>
+                    <i class="fa-solid fa-lock-open"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">سِجِلّي (Sigily)</h1>
-                    <span class="text-xs text-indigo-200">نظام تسجيل الحضور الذكي</span>
+                    <h1 class="font-bold text-lg leading-tight">سِجِلّي - لوحة الأدمن</h1>
+                    <span class="text-xs text-indigo-200">إدارة المحاضرات والردود</span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="switchView('dashboard')" class="px-3 py-1.5 text-sm bg-indigo-800 hover:bg-indigo-900 rounded-lg transition font-semibold">
-                    <i class="fa-solid fa-house ml-1"></i> النماذج
+                <button onclick="logoutAdmin()" class="px-3 py-1.5 text-xs bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket"></i> خروج
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Dynamic Content Area -->
+    <!-- Main Admin Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
 
-        <!-- 1. DASHBOARD VIEW -->
-        <section id="view-dashboard" class="space-y-6">
+        <!-- 1. LOGIN SCREEN (If not authenticated) -->
+        <div id="admin-login-screen" class="max-w-md mx-auto mt-16 bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6 text-center">
+            <div class="bg-indigo-50 text-indigo-600 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-inner">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-slate-800">تسجيل دخول الأدمن</h2>
+                <p class="text-slate-500 text-sm mt-1">الرجاء إدخال كلمة المرور للوصول للوحة التحكم</p>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <input type="password" id="admin-pass-input" placeholder="كلمة المرور (1234)" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center text-lg font-bold tracking-widest focus:outline-none focus:border-indigo-600 transition">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition">
+                    دخول لوحة التحكم <i class="fa-solid fa-arrow-right mr-2"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. DASHBOARD VIEW -->
+        <div id="admin-dashboard-view" class="hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800">لوحة التحكم</h2>
-                    <p class="text-slate-500 text-sm mt-1">أنشئ نماذج جديدة، استقبل الردود، وتابع الإحصائيات الفورية.</p>
+                    <h2 class="text-2xl font-black text-slate-800">إدارة النماذج والمحاضرات</h2>
+                    <p class="text-slate-500 text-sm mt-1">أنشئ النماذج، انسخ روابط الطلاب، وتابع إحصائيات الحضور.</p>
                 </div>
                 <button onclick="createNewForm()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus-circle"></i> إنشاء نموذج جديد
@@ -78,72 +85,50 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="forms-grid">
-                <!-- Dynamically populated via JS -->
+                <!-- Populated via JS -->
             </div>
-        </section>
+        </div>
 
-        <!-- 2. FORM BUILDER VIEW -->
-        <section id="view-builder" class="hidden space-y-6">
+        <!-- 3. FORM BUILDER VIEW -->
+        <div id="admin-builder-view" class="hidden space-y-6">
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="w-full sm:w-1/2">
                     <input type="text" id="builder-form-title" placeholder="عنوان النموذج (مثال: حضور محاضرة القانون المدني)" class="w-full text-xl sm:text-2xl font-black border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 text-slate-800 placeholder-slate-300 transition">
                     <input type="text" id="builder-form-desc" placeholder="وصف موجز أو تعليمات للطلاب..." class="w-full text-sm text-slate-500 border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 mt-1 placeholder-slate-300 transition">
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                     <button onclick="saveForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-emerald-100 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-save"></i> حفظ النموذج
                     </button>
-                    <button onclick="previewForm()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-eye"></i> معاينة ورابط
+                    <button onclick="switchAdminView('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
+                        رجوع
                     </button>
                 </div>
             </div>
 
             <div id="questions-container" class="space-y-4">
-                <!-- Questions appended here -->
+                <!-- Question cards -->
             </div>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-2 justify-center items-center">
-                <button onclick="addQuestion('text')" class="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-font"></i> نص قصير
+            <div class="flex flex-wrap gap-2 pt-2">
+                <button onclick="addQuestion('text')" class="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-font"></i> إضافة سؤال نصي
                 </button>
-                <button onclick="addQuestion('multiple')" class="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
+                <button onclick="addQuestion('multiple')" class="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-list-ul"></i> خيارات متعددة
                 </button>
-                <button onclick="addQuestion('rating')" class="bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
+                <button onclick="addQuestion('rating')" class="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-star"></i> تقييم نجوم
                 </button>
             </div>
-        </section>
-
-        <!-- 3. PUBLIC RESPONSE VIEW (Student/User view) -->
-        <section id="view-response" class="hidden max-w-2xl mx-auto space-y-6">
-            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-md border border-slate-100">
-                <div id="response-header" class="border-b border-slate-100 pb-4 mb-6">
-                    <h2 id="resp-title" class="text-2xl font-black text-slate-800">عنوان الاستبيان</h2>
-                    <p id="resp-desc" class="text-slate-500 text-sm mt-1">الوصف هنا...</p>
-                </div>
-                <div id="already-submitted-banner" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl mb-4 text-center font-bold">
-                    <i class="fa-solid fa-circle-check text-emerald-600 text-xl block mb-1"></i>
-                    لقد قمت بتسجيل حضورك من هذا الجهاز مسبقاً ولا يمكنك التسجيل مرة أخرى!
-                </div>
-                <form id="public-form" onsubmit="submitResponse(event)" class="space-y-6">
-                    <div id="response-questions-container" class="space-y-6">
-                        <!-- Questions rendered for answering -->
-                    </div>
-                    <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition text-base">
-                        إرسال الرد <i class="fa-solid fa-paper-plane mr-2"></i>
-                    </button>
-                </form>
-            </div>
-        </section>
+        </div>
 
         <!-- 4. ANALYTICS & RESPONSES VIEW -->
-        <section id="view-analytics" class="hidden space-y-6">
+        <div id="admin-analytics-view" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 id="analytics-title" class="text-2xl font-black text-slate-800">تحليلات الردود</h2>
-                    <p class="text-slate-500 text-sm mt-1">عرض ملخص إجابات الطلاب والمسجلين</p>
+                    <h2 id="analytics-title" class="text-2xl font-black text-slate-800">تحليلات الردود وإدارة الحضور</h2>
+                    <p class="text-slate-500 text-sm mt-1">بحث عن الطلاب، فك حظر البصمات، وتصدير التقارير</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button id="toggle-status-btn" onclick="toggleFormStatus()" class="px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5">
@@ -155,7 +140,7 @@
                     <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-file-excel"></i> تصدير Excel
                     </button>
-                    <button onclick="switchView('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
+                    <button onclick="switchAdminView('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
                         رجوع
                     </button>
                 </div>
@@ -182,10 +167,16 @@
                 </div>
             </div>
 
+            <!-- Search Bar for Admin to Find Students and Unlock Fingerprint -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 mr-1"></i>
+                <input type="text" id="admin-search-input" oninput="renderAnalytics()" placeholder="بحث باسم الطالب أو الكود لإدارة وتفكيك بصمة الجهاز..." class="w-full bg-transparent border-none focus:outline-none text-sm text-slate-700 placeholder-slate-400">
+            </div>
+
             <div id="analytics-content" class="space-y-4">
                 <!-- Populated dynamically -->
             </div>
-        </section>
+        </div>
 
     </main>
 
@@ -196,12 +187,12 @@
 
     <!-- Share Modal / Popup -->
     <div id="share-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 transform transition-all">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-black text-slate-800">مشاركة الرابط للطلاب</h3>
                 <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للمستهدفين لتسجيل الردود مباشرة:</p>
+            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للمستهدفين لتسجيل الحضور مباشرة:</p>
             <div class="flex items-center gap-2">
                 <input type="text" id="share-link-input" readonly class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-600 focus:outline-none">
                 <button onclick="copyShareLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shrink-0">نسخ</button>
@@ -212,96 +203,27 @@
         </div>
     </div>
 
-    <!-- JavaScript Core Logic -->
+    <!-- Admin Script Logic -->
     <script>
-        // Storage State
         let forms = JSON.parse(localStorage.getItem('sigily_forms')) || [];
         let responses = JSON.parse(localStorage.getItem('sigily_responses')) || {};
         let deviceSubmissions = JSON.parse(localStorage.getItem('sigily_device_submissions')) || {};
         let currentEditingFormId = null;
-        let currentAnsweringFormId = null;
+        let currentAnalyticsFormId = null;
 
-        // Get or Generate a persistent Device Fingerprint
-        function getDeviceFingerprint() {
-            let fp = localStorage.getItem('sigily_device_uuid');
-            if (!fp) {
-                fp = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-                localStorage.setItem('sigily_device_uuid', fp);
-            }
-            return fp;
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        // Audio Feedback Web Audio API (Fixed with automatic AudioContext resume on user interaction)
-        let audioCtx = null;
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
-
-        function playClickSound() {
-            try {
-                initAudio();
-                if (!audioCtx) return;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(700, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } catch(e) {
-                // Ignore audio restriction errors if any
-            }
-        }
-
-        // Attach click sound and audio context initializer globally
-        document.addEventListener('pointerdown', (e) => {
-            initAudio();
-            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('label') || e.target.closest('a')) {
-                playClickSound();
-            }
-        });
-
-        // Initialize sample form if empty
-        if (forms.length === 0) {
-            const sampleId = 'form_' + Date.now();
-            forms.push({
-                id: sampleId,
-                title: 'تسجيل حضور محاضرة القانون المدني',
-                description: 'يرجى إدخال البيانات بدقة خلال وقت المحاضرة.',
-                isOpen: true,
-                questions: [
-                    { id: 'q1', type: 'text', text: 'الاسم الثلاثي', required: true },
-                    { id: 'q2', type: 'text', text: 'رقم الجلوس / الكود', required: true },
-                    { id: 'q3', type: 'multiple', text: 'الفرقة الدراسية', options: ['الفرقة الأولى', 'الفرقة الثانية', 'الفرقة الثالثة', 'الفرقة الرابعة'], required: true },
-                    { id: 'q4', type: 'rating', text: 'كيف تقيم وضوح المحاضرة اليوم؟', required: false }
-                ]
-            });
-            responses[sampleId] = [
-                { q1: 'أحمد محمد علي', q2: '102030', q3: 'الفرقة الثالثة', q4: '5', timestamp: new Date().toLocaleString('ar-EG') }
-            ];
-            saveToStorage();
-        }
-
-        function saveToStorage() {
-            localStorage.setItem('sigily_forms', JSON.stringify(forms));
-            localStorage.setItem('sigily_responses', JSON.stringify(responses));
-            localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
-        }
-
-        // Toast Notification System
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
             let bgClass = 'bg-emerald-600 text-white';
             let icon = 'fa-circle-check';
             if (type === 'error') {
@@ -311,44 +233,56 @@
                 bgClass = 'bg-indigo-600 text-white';
                 icon = 'fa-circle-info';
             }
-
             toast.className = `${bgClass} px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform translate-y-[-20px] opacity-0 transition-all duration-300 font-bold text-sm pointer-events-auto`;
             toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><span>${message}</span>`;
-            
             container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
-            }, 10);
-
+            setTimeout(() => toast.classList.remove('translate-y-[-20px]', 'opacity-0'), 10);
             setTimeout(() => {
                 toast.classList.add('translate-y-[-20px]', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        // Switch Views
-        function switchView(viewName) {
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-builder').classList.add('hidden');
-            document.getElementById('view-response').classList.add('hidden');
-            document.getElementById('view-analytics').classList.add('hidden');
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('admin-pass-input').value.trim();
+            if (pass === '1234' || pass === 'admin2026') {
+                localStorage.setItem('sigily_is_admin', 'true');
+                document.getElementById('admin-login-screen').classList.add('hidden');
+                switchAdminView('dashboard');
+                showToast('تم تسجيل دخول الأدمن بنجاح', 'success');
+            } else {
+                showToast('كلمة المرور غير صحيحة. كلمة المرور هي 1234', 'error');
+            }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('sigily_is_admin');
+            document.getElementById('admin-dashboard-view').classList.add('hidden');
+            document.getElementById('admin-builder-view').classList.add('hidden');
+            document.getElementById('admin-analytics-view').classList.add('hidden');
+            document.getElementById('admin-login-screen').classList.remove('hidden');
+            document.getElementById('admin-pass-input').value = '';
+            showToast('تم تسجيل الخروج بنجاح', 'info');
+        }
+
+        function switchAdminView(viewName) {
+            document.getElementById('admin-dashboard-view').classList.add('hidden');
+            document.getElementById('admin-builder-view').classList.add('hidden');
+            document.getElementById('admin-analytics-view').classList.add('hidden');
 
             if (viewName === 'dashboard') {
-                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('admin-dashboard-view').classList.remove('hidden');
                 renderDashboard();
             } else if (viewName === 'builder') {
-                document.getElementById('view-builder').classList.remove('hidden');
-            } else if (viewName === 'response') {
-                document.getElementById('view-response').classList.remove('hidden');
+                document.getElementById('admin-builder-view').classList.remove('hidden');
             } else if (viewName === 'analytics') {
-                document.getElementById('view-analytics').classList.remove('hidden');
+                document.getElementById('admin-analytics-view').classList.remove('hidden');
                 renderAnalytics();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Render Dashboard Forms List
         function renderDashboard() {
             const grid = document.getElementById('forms-grid');
             grid.innerHTML = '';
@@ -394,7 +328,19 @@
             });
         }
 
-        // Form Builder Actions
+        function deleteForm(formId) {
+            if (confirm('هل أنت متأكد من حذف هذا النموذج نهائياً؟')) {
+                forms = forms.filter(f => f.id !== formId);
+                delete responses[formId];
+                delete deviceSubmissions[formId];
+                localStorage.setItem('sigily_forms', JSON.stringify(forms));
+                localStorage.setItem('sigily_responses', JSON.stringify(responses));
+                localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+                renderDashboard();
+                showToast('تم حذف النموذج بنجاح', 'info');
+            }
+        }
+
         function createNewForm() {
             currentEditingFormId = 'form_' + Date.now();
             document.getElementById('builder-form-title').value = '';
@@ -403,7 +349,7 @@
             
             addQuestion('text', 'الاسم الثلاثي');
             addQuestion('text', 'رقم الجلوس / الكود');
-            switchView('builder');
+            switchAdminView('builder');
             showToast('تم فتح محرر النموذج الجديد', 'info');
         }
 
@@ -417,11 +363,8 @@
             const container = document.getElementById('questions-container');
             container.innerHTML = '';
             
-            form.questions.forEach(q => {
-                appendQuestionToDOM(q);
-            });
-
-            switchView('builder');
+            form.questions.forEach(q => appendQuestionToDOM(q));
+            switchAdminView('builder');
             showToast('تم تحميل النموذج للتعديل', 'info');
         }
 
@@ -447,7 +390,7 @@
             if (q.type === 'multiple') {
                 optionsHtml = `
                     <div class="options-container space-y-2 mt-3">
-                        ${(q.options || []).map((opt, idx) => `
+                        ${(q.options || []).map((opt) => `
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-circle text-xs text-slate-300"></i>
                                 <input type="text" value="${escapeHtml(opt)}" class="option-input w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-600">
@@ -461,9 +404,7 @@
                 `;
             }
 
-            let typeBadge = 'نص قصير';
-            if (q.type === 'multiple') typeBadge = 'خيارات متعددة';
-            if (q.type === 'rating') typeBadge = 'تقييم نجوم';
+            let typeBadge = q.type === 'text' ? 'نص قصير' : (q.type === 'multiple' ? 'خيارات متعددة' : 'تقييم نجوم');
 
             card.innerHTML = `
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -506,55 +447,6 @@
                 const id = card.dataset.id;
                 const type = card.dataset.type;
                 const text = card.querySelector('.question-text-input').value.trim() || 'سؤال بدون عنوان';
-                
-                let options = [];
-                if (type === 'multiple') {
-                    card.querySelectorAll('.option-input').forEach(optInput => {
-                        options.push(optInput.value.trim());
-                    });
-                }
-
-                questions.push({ id, type, text, options, required: true });
-            });
-
-            if (questions.length === 0) {
-                showToast('يجب إضافة سؤال واحد على الأقل', 'error');
-                return;
-            }
-
-            const existingIndex = forms.findIndex(f => f.id === currentEditingFormId);
-            const existingForm = existingIndex >= 0 ? forms[existingIndex] : null;
-            const isOpen = existingForm ? (existingForm.isOpen !== undefined ? existingForm.isOpen : true) : true;
-            
-            const formData = { id: currentEditingFormId, title, description, isOpen, questions };
-
-            if (existingIndex >= 0) {
-                forms[existingIndex] = formData;
-            } else {
-                forms.push(formData);
-            }
-
-            saveToStorage();
-            showToast('تم حفظ النموذج بنجاح!', 'success');
-            switchView('dashboard');
-        }
-
-        function previewForm() {
-            if (!currentEditingFormId) return;
-            saveFormQuietly();
-            openResponseView(currentEditingFormId);
-        }
-
-        function saveFormQuietly() {
-            const title = document.getElementById('builder-form-title').value.trim() || 'نموذج بدون عنوان';
-            const description = document.getElementById('builder-form-desc').value.trim();
-            const questionCards = document.querySelectorAll('.question-card');
-            const questions = [];
-
-            questionCards.forEach(card => {
-                const id = card.dataset.id;
-                const type = card.dataset.type;
-                const text = card.querySelector('.question-text-input').value.trim() || 'سؤال';
                 let options = [];
                 if (type === 'multiple') {
                     card.querySelectorAll('.option-input').forEach(optInput => options.push(optInput.value.trim()));
@@ -565,176 +457,21 @@
             const existingIndex = forms.findIndex(f => f.id === currentEditingFormId);
             const existingForm = existingIndex >= 0 ? forms[existingIndex] : null;
             const isOpen = existingForm ? (existingForm.isOpen !== undefined ? existingForm.isOpen : true) : true;
-
+            
             const formData = { id: currentEditingFormId, title, description, isOpen, questions };
             if (existingIndex >= 0) forms[existingIndex] = formData;
             else forms.push(formData);
-            saveToStorage();
-        }
 
-        function openResponseView(formId) {
-            const form = forms.find(f => f.id === formId);
-            if (!form) {
-                showToast('النموذج غير موجود', 'error');
-                return;
-            }
-            
-            currentAnsweringFormId = formId;
-            document.getElementById('resp-title').innerText = form.title;
-            document.getElementById('resp-desc').innerText = form.description || '';
-
-            const container = document.getElementById('response-questions-container');
-            container.innerHTML = '';
-
-            const deviceFp = getDeviceFingerprint();
-            const submittedRecord = deviceSubmissions[formId];
-            const alreadySubmittedBanner = document.getElementById('already-submitted-banner');
-            const submitBtn = document.getElementById('submit-btn');
-
-            // Check if form is closed or device already submitted
-            if (form.isOpen === false) {
-                container.innerHTML = `
-                    <div class="text-center py-12 bg-rose-50 rounded-2xl border border-rose-100 p-6 space-y-3">
-                        <i class="fa-solid fa-lock text-4xl text-rose-500 mb-2"></i>
-                        <h3 class="text-xl font-black text-rose-800">عذراً، تم إغلاق استقبال الردود</h3>
-                        <p class="text-rose-600 text-sm">أوقف المسؤول استقبال الردود لهذا النموذج حالياً.</p>
-                    </div>
-                `;
-                alreadySubmittedBanner.classList.add('hidden');
-                submitBtn.style.display = 'none';
-                switchView('response');
-                return;
-            }
-
-            if (submittedRecord) {
-                alreadySubmittedBanner.classList.remove('hidden');
-                alreadySubmittedBanner.innerHTML = `
-                    <i class="fa-solid fa-circle-check text-emerald-600 text-2xl block mb-2"></i>
-                    <span class="text-base block font-black text-slate-800 mb-1">لقد قمت بتسجيل حضورك مسبقاً بهذا الجهاز!</span>
-                    <span class="text-xs text-slate-600 font-semibold block">الاسم المسجل: ${escapeHtml(submittedRecord.name || '-')} | الكود: ${escapeHtml(submittedRecord.code || '-')}</span>
-                    <span class="text-xs text-indigo-600 font-semibold block mt-1">لا يمكنك تعديل البيانات أو التسجيل مرة أخرى منعاً للتكرار.</span>
-                `;
-                submitBtn.style.display = 'none';
-                
-                // Render fields as read-only / disabled
-                form.questions.forEach((q, index) => {
-                    const savedVal = submittedRecord.answers[q.id] || '';
-                    const div = document.createElement('div');
-                    div.className = 'space-y-2 opacity-80';
-                    div.innerHTML = `
-                        <label class="block font-bold text-slate-800 text-sm">${index + 1}. ${escapeHtml(q.text)}</label>
-                        <input type="text" value="${escapeHtml(savedVal)}" disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 cursor-not-allowed">
-                    `;
-                    container.appendChild(div);
-                });
-
-                switchView('response');
-                return;
-            }
-
-            alreadySubmittedBanner.classList.add('hidden');
-            submitBtn.style.display = 'block';
-
-            form.questions.forEach((q, index) => {
-                const div = document.createElement('div');
-                div.className = 'space-y-2';
-                
-                let inputHtml = '';
-                if (q.type === 'text') {
-                    inputHtml = `<input type="text" name="${q.id}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="اكتب إجابتك هنا...">`;
-                } else if (q.type === 'multiple') {
-                    inputHtml = `<div class="space-y-2 mt-2">
-                        ${q.options.map((opt, optIdx) => `
-                            <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 hover:border-indigo-300 p-3 rounded-xl cursor-pointer transition">
-                                <input type="radio" name="${q.id}" value="${escapeHtml(opt)}" required class="text-indigo-600 focus:ring-indigo-500">
-                                <span class="text-sm font-semibold text-slate-700">${escapeHtml(opt)}</span>
-                            </label>
-                        `).join('')}
-                    </div>`;
-                } else if (q.type === 'rating') {
-                    inputHtml = `<div class="flex items-center gap-3 justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        ${[1, 2, 3, 4, 5].map(star => `
-                            <label class="cursor-pointer text-xl text-amber-400 hover:scale-110 transition">
-                                <input type="radio" name="${q.id}" value="${star}" required class="sr-only peer">
-                                <i class="fa-solid fa-star peer-checked:text-amber-500 text-slate-300 peer-checked:scale-125 transition"></i>
-                            </label>
-                        `).join('')}
-                    </div>`;
-                }
-
-                div.innerHTML = `
-                    <label class="block font-bold text-slate-800 text-sm">
-                        ${index + 1}. ${escapeHtml(q.text)} <span class="text-rose-500">*</span>
-                    </label>
-                    ${inputHtml}
-                `;
-                container.appendChild(div);
-            });
-
-            switchView('response');
-        }
-
-        // Submit Response Action with Fingerprint Lock
-        function submitResponse(e) {
-            e.preventDefault();
-            const form = forms.find(f => f.id === currentAnsweringFormId);
-            if (!form) return;
-
-            if (form.isOpen === false) {
-                showToast('عذراً، تم إغلاق النموذج ولا يمكن استقبال ردود جديدة', 'error');
-                return;
-            }
-
-            const deviceFp = getDeviceFingerprint();
-            if (deviceSubmissions[currentAnsweringFormId]) {
-                showToast('لقد مسحت أو سجلت من هذا الجهاز مسبقاً!', 'error');
-                openResponseView(currentAnsweringFormId);
-                return;
-            }
-
-            const formEl = document.getElementById('public-form');
-            const formData = new FormData(formEl);
-            const responseObj = { timestamp: new Date().toLocaleString('ar-EG') };
-            const answersMap = {};
-
-            for (let [key, value] of formData.entries()) {
-                responseObj[key] = value;
-                answersMap[key] = value;
-            }
-
-            // Extract Name and Code if available in questions for quick device locking summary
-            let studentName = '';
-            let studentCode = '';
-            form.questions.forEach(q => {
-                if (q.text.includes('الاسم') || q.text.includes('اسم')) studentName = responseObj[q.id] || '';
-                if (q.text.includes('الكود') || q.text.includes('الجلوس')) studentCode = responseObj[q.id] || '';
-            });
-
-            if (!responses[currentAnsweringFormId]) {
-                responses[currentAnsweringFormId] = [];
-            }
-            responses[currentAnsweringFormId].push(responseObj);
-
-            // Save device fingerprint lock
-            deviceSubmissions[currentAnsweringFormId] = {
-                name: studentName,
-                code: studentCode,
-                answers: answersMap,
-                timestamp: responseObj.timestamp
-            };
-
-            saveToStorage();
-
-            showToast('تم تسجيل حضورك بنجاح!', 'success');
-            openResponseView(currentAnsweringFormId);
+            localStorage.setItem('sigily_forms', JSON.stringify(forms));
+            showToast('تم حفظ النموذج بنجاح!', 'success');
+            switchAdminView('dashboard');
         }
 
         function openShareModal(formId) {
-            const form = forms.find(f => f.id === formId);
-            if (!form) return;
             currentEditingFormId = formId;
-            const dummyLink = window.location.href.split('#')[0] + '#form=' + formId;
-            document.getElementById('share-link-input').value = dummyLink;
+            const currentUrl = window.location.href;
+            const studentUrl = currentUrl.replace('admin.html', 'survey_heart_app.html') + `?f=${formId}`;
+            document.getElementById('share-link-input').value = studentUrl;
             document.getElementById('share-modal').classList.remove('hidden');
         }
 
@@ -746,13 +483,12 @@
             const input = document.getElementById('share-link-input');
             input.select();
             document.execCommand('copy');
-            showToast('تم نسخ الرابط الحافظة بنجاح!', 'success');
+            showToast('تم نسخ الرابط القصير بنجاح!', 'success');
         }
 
-        let currentAnalyticsFormId = null;
         function viewAnalytics(formId) {
             currentAnalyticsFormId = formId;
-            switchView('analytics');
+            switchAdminView('analytics');
             renderAnalytics();
         }
 
@@ -760,7 +496,7 @@
             const form = forms.find(f => f.id === currentAnalyticsFormId);
             if (!form) return;
             form.isOpen = form.isOpen === false ? true : false;
-            saveToStorage();
+            localStorage.setItem('sigily_forms', JSON.stringify(forms));
             renderAnalytics();
             showToast(form.isOpen ? 'تم فتح النموذج لاستقبال الردود' : 'تم إغلاق النموذج بنجاح', form.isOpen ? 'success' : 'info');
         }
@@ -787,26 +523,44 @@
                 toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> فتح استقبال الردود';
             }
 
+            const searchQuery = document.getElementById('admin-search-input').value.toLowerCase().trim();
             const container = document.getElementById('analytics-content');
             container.innerHTML = '';
 
-            if (formResponses.length === 0) {
+            const filteredResponses = formResponses.filter(resp => {
+                if (!searchQuery) return true;
+                let match = false;
+                for (let key in resp) {
+                    if (String(resp[key]).toLowerCase().includes(searchQuery)) { match = true; break; }
+                }
+                return match;
+            });
+
+            if (filteredResponses.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12 bg-white rounded-2xl border border-slate-100">
                         <i class="fa-solid fa-inbox text-4xl text-slate-300 mb-3"></i>
-                        <p class="text-slate-500 font-semibold">لا توجد ردود مسجلة حتى الآن.</p>
+                        <p class="text-slate-500 font-semibold">لا توجد ردود مطابقة للبحث.</p>
                     </div>
                 `;
                 return;
             }
 
-            formResponses.forEach((resp, index) => {
+            filteredResponses.forEach((resp, index) => {
                 const card = document.createElement('div');
                 card.className = 'bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-3';
                 
+                let studentCode = '';
+                form.questions.forEach(q => {
+                    if (q.text.includes('الكود') || q.text.includes('الجلوس')) studentCode = resp[q.id] || '';
+                });
+
                 let detailsHtml = `<div class="flex justify-between items-center text-xs text-slate-400 border-b border-slate-100 pb-2 mb-3">
                     <span class="font-bold text-indigo-600">الطالب #${index + 1}</span>
-                    <span class="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 font-semibold"><i class="fa-regular fa-clock ml-1"></i> ${resp.timestamp || ''}</span>
+                    <div class="flex items-center gap-3">
+                        ${studentCode ? `<button onclick="unlockStudentDevice('${form.id}', '${escapeHtml(studentCode)}')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1"><i class="fa-solid fa-unlock-keyhole"></i> فك حظر البصمة</button>` : ''}
+                        <span class="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 font-semibold"><i class="fa-regular fa-clock ml-1"></i> ${resp.timestamp || ''}</span>
+                    </div>
                 </div>`;
 
                 form.questions.forEach(q => {
@@ -824,132 +578,101 @@
             });
         }
 
+        function unlockStudentDevice(formId, code) {
+            if (confirm(`هل أنت متأكد من فك حظر بصمة الجهاز للطالب صاحب الكود: ${code}?`)) {
+                for (let fp in deviceSubmissions) {
+                    if (deviceSubmissions[fp].code === code) delete deviceSubmissions[fp];
+                }
+                localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+                showToast(`تم فك حظر البصمة للطالب ${code} بنجاح`, 'success');
+                renderAnalytics();
+            }
+        }
+
         function printResponsesReport() {
             const form = forms.find(f => f.id === currentAnalyticsFormId);
-            const formResponses = responses[currentAnalyticsFormId] || [];
-            if (!form || formResponses.length === 0) {
-                showToast('لا توجد بيانات للطباعة', 'error');
-                return;
-            }
+            if (!form) return;
+            const formResponses = responses[form.id] || [];
 
             let printWindow = window.open('', '_blank');
-            let htmlContent = `
+            let html = `
                 <html lang="ar" dir="rtl">
                 <head>
-                    <meta charset="UTF-8">
-                    <title>تقرير حضور - ${form.title}</title>
+                    <title>تقرير الحضور - ${escapeHtml(form.title)}</title>
                     <style>
-                        body { font-family: 'Cairo', Tahoma, sans-serif; padding: 20px; color: #1e293b; direction: rtl; }
-                        h1 { font-size: 20px; margin-bottom: 5px; }
-                        p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: right; font-size: 13px; }
-                        th { background-color: #4f46e5; color: #ffffff; }
-                        tr:nth-child(even) { background-color: #f8fafc; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+                        body { font-family: 'Cairo', Arial, sans-serif; padding: 20px; color: #333; }
+                        h2 { text-align: center; color: #4f46e5; margin-bottom: 5px; }
+                        p { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: right; font-size: 14px; }
+                        th { background-color: #f8fafc; color: #1e293b; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
                     </style>
                 </head>
                 <body>
-                    <h1>تقرير حضور المحاضرة: ${form.title}</h1>
-                    <p>إجمالي الحاضرين والمسجلين: ${formResponses.length} | تاريخ التقرير: ${new Date().toLocaleString('ar-EG')}</p>
+                    <h2>${escapeHtml(form.title)}</h2>
+                    <p>إجمالي الحضور: ${formResponses.length} طالب | تحت إشراف أدمن الدفعة طه الجيار</p>
                     <table>
                         <thead>
                             <tr>
                                 <th>#</th>
-                                ${form.questions.map(q => `<th>${q.text}</th>`).join('')}
+                                <th>اسم الطالب</th>
+                                <th>الكود / رقم الجلوس</th>
                                 <th>وقت تسجيل الحضور</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
 
-            formResponses.forEach((resp, idx) => {
-                htmlContent += `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        ${form.questions.map(q => `<td>${resp[q.id] || '-'}</td>`).join('')}
-                        <td>${resp.timestamp || '-'}</td>
-                    </tr>
-                `;
+            formResponses.forEach((resp, i) => {
+                let name = '-';
+                let code = '-';
+                form.questions.forEach(q => {
+                    if (q.text.includes('الاسم') || q.text.includes('اسم')) name = resp[q.id] || '-';
+                    if (q.text.includes('الكود') || q.text.includes('الجلوس')) code = resp[q.id] || '-';
+                });
+                html += `<tr><td>${i + 1}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(code)}</td><td>${escapeHtml(resp.timestamp || '-')}</td></tr>`;
             });
 
-            htmlContent += `
-                        </tbody>
-                    </table>
-                    <div class="footer">
-                        جميع الحقوق محفوظة © 2026 - تم التطوير بواسطة عمرو ربيع آدمن الفرقة الثانية | تحت إشراف أدمن الدفعة طه الجيار
-                    </div>
-                </body>
-                </html>
-            `;
-
-            printWindow.document.write(htmlContent);
+            html += `</tbody></table><div class="footer">تم استخراج التقرير بواسطة سِجِلّي - تطوير: عمر ربيع آدمن الفرقة الثانية</div></body></html>`;
+            printWindow.document.write(html);
             printWindow.document.close();
             printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
+            setTimeout(() => printWindow.print(), 500);
         }
 
         function exportToCSV() {
             const form = forms.find(f => f.id === currentAnalyticsFormId);
-            const formResponses = responses[currentAnalyticsFormId] || [];
-            if (!form || formResponses.length === 0) {
-                showToast('لا توجد بيانات للتصدير', 'error');
-                return;
-            }
+            if (!form) return;
+            const formResponses = responses[form.id] || [];
 
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            let headers = form.questions.map(q => `"${q.text}"`).join(',');
-            csvContent += `,${headers},"${'وقت تسجيل الحضور'}"\n`;
-
-            formResponses.forEach((resp, idx) => {
-                let row = [`"${idx + 1}"`];
+            let csvContent = "\uFEFFم,اسم الطالب,الكود,وقت التسجيل\n";
+            formResponses.forEach((resp, i) => {
+                let name = '-';
+                let code = '-';
                 form.questions.forEach(q => {
-                    row.push(`"${(resp[q.id] || '').replace(/"/g, '""')}"`);
+                    if (q.text.includes('الاسم') || q.text.includes('اسم')) name = resp[q.id] || '-';
+                    if (q.text.includes('الكود') || q.text.includes('الجلوس')) code = resp[q.id] || '-';
                 });
-                row.push(`"${resp.timestamp || ''}"`);
-                csvContent += row.join(',') + '\n';
+                csvContent += `${i + 1},"${name}","${code}","${resp.timestamp || '-'}"\n`;
             });
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `${form.title}_responses.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('تم تصدير الملف بنجاح!', 'success');
-        }
-
-        function deleteForm(formId) {
-            if (!confirm('هل أنت متأكد من حذف هذا النموذج نهائياً؟')) return;
-            forms = forms.filter(f => f.id !== formId);
-            delete responses[formId];
-            delete deviceSubmissions[formId];
-            saveToStorage();
-            renderDashboard();
-            showToast('تم حذف النموذج بنجاح', 'info');
-        }
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `${form.title}_attendance.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('تم تصدير ملف الردود بنجاح', 'success');
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            const hash = window.location.hash;
-            if (hash.includes('form=')) {
-                const formId = hash.split('form=')[1];
-                openResponseView(formId);
-            } else {
-                renderDashboard();
+            const isAdmin = localStorage.getItem('sigily_is_admin') === 'true';
+            if (isAdmin) {
+                document.getElementById('admin-login-screen').classList.add('hidden');
+                switchAdminView('dashboard');
             }
         });
     </script>
