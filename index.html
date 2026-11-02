@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الأدمن - سِجِلّي (Sigily)</title>
+    <title>سِجِلّي (Sigily) - نظام تسجيل الحضور والأنشطة</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -15,6 +15,11 @@
         body {
             font-family: 'Cairo', sans-serif;
             background-color: #f3f4f6;
+        }
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f59e0b !important;
         }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -35,62 +40,100 @@
     <!-- Header Navigation -->
     <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goStudentHome()">
                 <div class="bg-white text-indigo-700 p-2 rounded-xl shadow-inner font-black text-xl">
-                    <i class="fa-solid fa-lock-open"></i>
+                    <i class="fa-solid fa-clipboard-question"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">سِجِلّي - لوحة الأدمن</h1>
-                    <span class="text-xs text-indigo-200">إدارة المحاضرات والردود</span>
+                    <h1 class="font-bold text-lg leading-tight">سِجِلّي (Sigily)</h1>
+                    <span class="text-xs text-indigo-200">بوابة تسجيل الحضور الرسمية</span>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="logoutAdmin()" class="px-3 py-1.5 text-xs bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition font-bold flex items-center gap-1.5">
-                    <i class="fa-solid fa-right-from-bracket"></i> خروج
+            <div class="flex items-center gap-2" id="nav-actions">
+                <button type="button" onclick="openAdminModal()" class="px-4 py-2 text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-xl transition font-black flex items-center gap-2 shadow-lg cursor-pointer">
+                    <i class="fa-solid fa-lock"></i> لوحة الأدمن
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Admin Container -->
+    <!-- Main Dynamic Content Area -->
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
 
-        <!-- 1. LOGIN SCREEN (If not authenticated) -->
-        <div id="admin-login-screen" class="max-w-md mx-auto mt-16 bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6 text-center">
-            <div class="bg-indigo-50 text-indigo-600 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-inner">
-                <i class="fa-solid fa-key"></i>
+        <!-- 1. STUDENT PORTAL (Active Lectures Hub) -->
+        <section id="view-student-portal" class="space-y-6">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-6">
+                <div class="space-y-2 text-center sm:text-right">
+                    <span class="bg-indigo-500/50 text-indigo-100 text-xs px-3 py-1 rounded-full font-bold">بوابة الطلاب</span>
+                    <h2 class="text-2xl sm:text-3xl font-black">المحاضرات وجلسات الحضور المتاحة</h2>
+                    <p class="text-indigo-100 text-sm">اختر المحاضرة الحالية لتسجيل حضورك بدقة وسرعة.</p>
+                </div>
             </div>
-            <div>
-                <h2 class="text-2xl font-black text-slate-800">تسجيل دخول الأدمن</h2>
-                <p class="text-slate-500 text-sm mt-1">الرجاء إدخال كلمة المرور للوصول للوحة التحكم</p>
-            </div>
-            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <input type="password" id="admin-pass-input" placeholder="كلمة المرور (1234)" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center text-lg font-bold tracking-widest focus:outline-none focus:border-indigo-600 transition">
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition">
-                    دخول لوحة التحكم <i class="fa-solid fa-arrow-right mr-2"></i>
-                </button>
-            </form>
-        </div>
 
-        <!-- 2. DASHBOARD VIEW -->
-        <div id="admin-dashboard-view" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="student-lectures-grid">
+                <!-- Dynamically populated open lectures -->
+            </div>
+        </section>
+
+        <!-- 2. STUDENT RESPONSE FORM VIEW -->
+        <section id="view-response" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-md border border-slate-100">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 id="resp-title" class="text-2xl font-black text-slate-800">عنوان المحاضرة</h2>
+                        <p id="resp-desc" class="text-slate-500 text-sm mt-1">الوصف هنا...</p>
+                    </div>
+                    <button onclick="goStudentHome()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-arrow-right ml-1"></i> العودة للمحاضرات
+                    </button>
+                </div>
+                
+                <!-- Success Message Container -->
+                <div id="already-submitted-banner" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-900 p-8 rounded-2xl mb-4 text-center space-y-4">
+                    <div class="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center text-4xl mx-auto shadow-md">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800">تم تسجيل حضور بنجاح</h3>
+                </div>
+
+                <form id="public-form" onsubmit="submitResponse(event)" class="space-y-6">
+                    <div id="response-questions-container" class="space-y-6">
+                        <!-- Questions rendered for answering -->
+                    </div>
+                    <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition text-base">
+                        إرسال الرد وتأكيد الحضور <i class="fa-solid fa-paper-plane mr-2"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 3. ADMIN DASHBOARD VIEW -->
+        <section id="view-admin-dashboard" class="hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800">إدارة النماذج والمحاضرات</h2>
-                    <p class="text-slate-500 text-sm mt-1">أنشئ النماذج، انسخ روابط الطلاب، وتابع إحصائيات الحضور.</p>
+                    <h2 class="text-2xl font-black text-slate-800">لوحة تحكم الأدمن</h2>
+                    <p class="text-slate-500 text-sm mt-1">أنشئ النماذج، تابع الحضور، وأدر بصمات الأجهزة.</p>
                 </div>
-                <button onclick="createNewForm()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus-circle"></i> إنشاء نموذج جديد
-                </button>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="createNewForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> إنشاء نموذج جديد
+                    </button>
+                    <button onclick="goStudentHome()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold transition">
+                        بوابة الطلاب
+                    </button>
+                    <button onclick="logoutAdmin()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl font-bold transition">
+                        إقفال الأدمن
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="forms-grid">
-                <!-- Populated via JS -->
+                <!-- Dynamically populated via JS -->
             </div>
-        </div>
+        </section>
 
-        <!-- 3. FORM BUILDER VIEW -->
-        <div id="admin-builder-view" class="hidden space-y-6">
+        <!-- 4. FORM BUILDER VIEW (Admin) -->
+        <section id="view-admin-builder" class="hidden space-y-6">
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="w-full sm:w-1/2">
                     <input type="text" id="builder-form-title" placeholder="عنوان النموذج (مثال: حضور محاضرة القانون المدني)" class="w-full text-xl sm:text-2xl font-black border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 text-slate-800 placeholder-slate-300 transition">
@@ -100,14 +143,14 @@
                     <button onclick="saveForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-emerald-100 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-save"></i> حفظ النموذج
                     </button>
-                    <button onclick="switchAdminView('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
+                    <button onclick="switchView('admin-dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
                         رجوع
                     </button>
                 </div>
             </div>
 
             <div id="questions-container" class="space-y-4">
-                <!-- Question cards -->
+                <!-- Question cards populated here -->
             </div>
 
             <div class="flex flex-wrap gap-2 pt-2">
@@ -121,10 +164,10 @@
                     <i class="fa-solid fa-star"></i> تقييم نجوم
                 </button>
             </div>
-        </div>
+        </section>
 
-        <!-- 4. ANALYTICS & RESPONSES VIEW -->
-        <div id="admin-analytics-view" class="hidden space-y-6">
+        <!-- 5. ANALYTICS & RESPONSES VIEW (Admin) -->
+        <section id="view-admin-analytics" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 id="analytics-title" class="text-2xl font-black text-slate-800">تحليلات الردود وإدارة الحضور</h2>
@@ -140,7 +183,7 @@
                     <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-file-excel"></i> تصدير Excel
                     </button>
-                    <button onclick="switchAdminView('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
+                    <button onclick="switchView('admin-dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
                         رجوع
                     </button>
                 </div>
@@ -167,7 +210,6 @@
                 </div>
             </div>
 
-            <!-- Search Bar for Admin to Find Students and Unlock Fingerprint -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 mr-1"></i>
                 <input type="text" id="admin-search-input" oninput="renderAnalytics()" placeholder="بحث باسم الطالب أو الكود لإدارة وتفكيك بصمة الجهاز..." class="w-full bg-transparent border-none focus:outline-none text-sm text-slate-700 placeholder-slate-400">
@@ -176,7 +218,7 @@
             <div id="analytics-content" class="space-y-4">
                 <!-- Populated dynamically -->
             </div>
-        </div>
+        </section>
 
     </main>
 
@@ -192,7 +234,7 @@
                 <h3 class="text-lg font-black text-slate-800">مشاركة الرابط للطلاب</h3>
                 <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للمستهدفين لتسجيل الحضور مباشرة:</p>
+            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للطلاب لتسجيل الحضور مباشرة:</p>
             <div class="flex items-center gap-2">
                 <input type="text" id="share-link-input" readonly class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-600 focus:outline-none">
                 <button onclick="copyShareLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shrink-0">نسخ</button>
@@ -203,12 +245,33 @@
         </div>
     </div>
 
-    <!-- Admin Script Logic -->
+    <!-- Admin Password Modal (Reliable Popup) -->
+    <div id="admin-password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5 text-center">
+            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-slate-800">تسجيل دخول الأدمن</h3>
+                <p class="text-slate-500 text-xs mt-1">أدخل كلمة المرور للوصول إلى لوحة التحكم</p>
+            </div>
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-4">
+                <input type="password" id="modal-admin-pass" placeholder="كلمة المرور" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center text-lg font-bold tracking-widest focus:outline-none focus:border-indigo-600 transition">
+                <div class="flex gap-2">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition text-sm">دخول</button>
+                    <button type="button" onclick="closeAdminModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold transition text-sm">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Core Logic -->
     <script>
         let forms = JSON.parse(localStorage.getItem('sigily_forms')) || [];
         let responses = JSON.parse(localStorage.getItem('sigily_responses')) || {};
         let deviceSubmissions = JSON.parse(localStorage.getItem('sigily_device_submissions')) || {};
         let currentEditingFormId = null;
+        let currentAnsweringFormId = null;
         let currentAnalyticsFormId = null;
 
         function escapeHtml(str) {
@@ -220,6 +283,70 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
+
+        function openAdminModal() {
+            document.getElementById('modal-admin-pass').value = '';
+            document.getElementById('admin-password-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modal-admin-pass').focus(), 100);
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-password-modal').classList.add('hidden');
+        }
+
+        function verifyAdminPassword(e) {
+            e.preventDefault();
+            const pass = document.getElementById('modal-admin-pass').value.trim();
+            if (pass === 'Amr0155') {
+                localStorage.setItem('sigily_is_admin', 'true');
+                closeAdminModal();
+                switchView('admin-dashboard');
+                showToast('تم فتح لوحة الأدمن بنجاح', 'success');
+            } else {
+                showToast('كلمة المرور غير صحيحة', 'error');
+            }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('sigily_is_admin');
+            switchView('student-portal');
+            showToast('تم إقفال لوحة الأدمن', 'info');
+        }
+
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClickSound() {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch(e) {}
+        }
+
+        document.addEventListener('pointerdown', (e) => {
+            initAudio();
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('label') || e.target.closest('a')) {
+                playClickSound();
+            }
+        });
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -243,47 +370,202 @@
             }, 3000);
         }
 
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const pass = document.getElementById('admin-pass-input').value.trim();
-            if (pass === '1234' || pass === 'admin2026') {
-                localStorage.setItem('sigily_is_admin', 'true');
-                document.getElementById('admin-login-screen').classList.add('hidden');
-                switchAdminView('dashboard');
-                showToast('تم تسجيل دخول الأدمن بنجاح', 'success');
-            } else {
-                showToast('كلمة المرور غير صحيحة. كلمة المرور هي 1234', 'error');
-            }
-        }
+        function switchView(viewName) {
+            document.getElementById('view-student-portal').classList.add('hidden');
+            document.getElementById('view-response').classList.add('hidden');
+            document.getElementById('view-admin-dashboard').classList.add('hidden');
+            document.getElementById('view-admin-builder').classList.add('hidden');
+            document.getElementById('view-admin-analytics').classList.add('hidden');
 
-        function logoutAdmin() {
-            localStorage.removeItem('sigily_is_admin');
-            document.getElementById('admin-dashboard-view').classList.add('hidden');
-            document.getElementById('admin-builder-view').classList.add('hidden');
-            document.getElementById('admin-analytics-view').classList.add('hidden');
-            document.getElementById('admin-login-screen').classList.remove('hidden');
-            document.getElementById('admin-pass-input').value = '';
-            showToast('تم تسجيل الخروج بنجاح', 'info');
-        }
-
-        function switchAdminView(viewName) {
-            document.getElementById('admin-dashboard-view').classList.add('hidden');
-            document.getElementById('admin-builder-view').classList.add('hidden');
-            document.getElementById('admin-analytics-view').classList.add('hidden');
-
-            if (viewName === 'dashboard') {
-                document.getElementById('admin-dashboard-view').classList.remove('hidden');
-                renderDashboard();
-            } else if (viewName === 'builder') {
-                document.getElementById('admin-builder-view').classList.remove('hidden');
-            } else if (viewName === 'analytics') {
-                document.getElementById('admin-analytics-view').classList.remove('hidden');
+            if (viewName === 'student-portal') {
+                document.getElementById('view-student-portal').classList.remove('hidden');
+                renderStudentPortal();
+            } else if (viewName === 'response') {
+                document.getElementById('view-response').classList.remove('hidden');
+            } else if (viewName === 'admin-dashboard') {
+                document.getElementById('view-admin-dashboard').classList.remove('hidden');
+                renderAdminDashboard();
+            } else if (viewName === 'admin-builder') {
+                document.getElementById('view-admin-builder').classList.remove('hidden');
+            } else if (viewName === 'admin-analytics') {
+                document.getElementById('view-admin-analytics').classList.remove('hidden');
                 renderAnalytics();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function renderDashboard() {
+        function goStudentHome() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('f')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            switchView('student-portal');
+        }
+
+        function renderStudentPortal() {
+            const grid = document.getElementById('student-lectures-grid');
+            grid.innerHTML = '';
+
+            const activeForms = forms.filter(f => f.isOpen !== false);
+
+            if (activeForms.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-100 p-8 space-y-3 shadow-sm">
+                        <i class="fa-solid fa-calendar-xmark text-5xl text-slate-300 mb-2"></i>
+                        <h3 class="text-xl font-black text-slate-800">لا توجد محاضرات متاحة لتسجيل الحضور حالياً</h3>
+                        <p class="text-slate-500 text-sm">سيقوم أدمن الدفعة بفتح المحاضرات في موعدها المحدد.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            activeForms.forEach(form => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition flex flex-col justify-between gap-6';
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> التسجيل مفتوح
+                            </span>
+                        </div>
+                        <h3 class="font-black text-xl text-slate-800 leading-snug">${escapeHtml(form.title)}</h3>
+                        <p class="text-slate-500 text-sm line-clamp-2">${escapeHtml(form.description || 'اضغط أدناه لتسجيل حضورك في هذه المحاضرة.')}</p>
+                    </div>
+                    <button onclick="openResponseView('${form.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-bold transition shadow-md shadow-indigo-100 flex items-center justify-center gap-2">
+                        تسجيل الحضور الآن <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openResponseView(formId) {
+            const form = forms.find(f => f.id === formId);
+            if (!form) {
+                showToast('المحاضرة غير موجودة', 'error');
+                return;
+            }
+            
+            currentAnsweringFormId = formId;
+            document.getElementById('resp-title').innerText = form.title;
+            document.getElementById('resp-desc').innerText = form.description || '';
+
+            const container = document.getElementById('response-questions-container');
+            container.innerHTML = '';
+
+            const submittedRecord = deviceSubmissions[formId];
+            const alreadySubmittedBanner = document.getElementById('already-submitted-banner');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (form.isOpen === false) {
+                showToast('عذراً، تم إغلاق تسجيل الحضور لهذه المحاضرة', 'error');
+                switchView('student-portal');
+                return;
+            }
+
+            if (submittedRecord) {
+                alreadySubmittedBanner.classList.remove('hidden');
+                container.innerHTML = '';
+                submitBtn.style.display = 'none';
+                switchView('response');
+                return;
+            }
+
+            alreadySubmittedBanner.classList.add('hidden');
+            submitBtn.style.display = 'block';
+
+            form.questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'space-y-2';
+                
+                let inputHtml = '';
+                if (q.type === 'text') {
+                    inputHtml = `<input type="text" name="${q.id}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="اكتب إجابتك هنا...">`;
+                } else if (q.type === 'multiple') {
+                    inputHtml = `<div class="space-y-2 mt-2">
+                        ${q.options.map((opt) => `
+                            <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 hover:border-indigo-300 p-3.5 rounded-xl cursor-pointer transition">
+                                <input type="radio" name="${q.id}" value="${escapeHtml(opt)}" required class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="text-sm font-semibold text-slate-700">${escapeHtml(opt)}</span>
+                            </label>
+                        `).join('')}
+                    </div>`;
+                } else if (q.type === 'rating') {
+                    inputHtml = `<div class="star-rating flex items-center gap-2 justify-center bg-slate-50 p-4 rounded-xl border border-slate-200 flex-row-reverse">
+                        ${[5, 4, 3, 2, 1].map(star => `
+                            <input type="radio" id="star${star}_${q.id}" name="${q.id}" value="${star}" required class="sr-only peer">
+                            <label for="star${star}_${q.id}" class="cursor-pointer text-2xl text-slate-300 transition"><i class="fa-solid fa-star"></i></label>
+                        `).join('')}
+                    </div>`;
+                }
+
+                div.innerHTML = `
+                    <label class="block font-bold text-slate-800 text-sm">
+                        ${index + 1}. ${escapeHtml(q.text)} <span class="text-rose-500">*</span>
+                    </label>
+                    ${inputHtml}
+                `;
+                container.appendChild(div);
+            });
+
+            switchView('response');
+        }
+
+        function submitResponse(e) {
+            e.preventDefault();
+            const form = forms.find(f => f.id === currentAnsweringFormId);
+            if (!form) return;
+
+            if (form.isOpen === false) {
+                showToast('عذراً، تم إغلاق النموذج ولا يمكن استقبال ردود جديدة', 'error');
+                return;
+            }
+
+            if (deviceSubmissions[currentAnsweringFormId]) {
+                showToast('لقد قمت بتسجيل الحضور مسبقاً من هذا الجهاز!', 'error');
+                openResponseView(currentAnsweringFormId);
+                return;
+            }
+
+            const formEl = document.getElementById('public-form');
+            const formData = new FormData(formEl);
+            const responseObj = { timestamp: new Date().toLocaleString('ar-EG') };
+            const answersMap = {};
+
+            for (let [key, value] of formData.entries()) {
+                responseObj[key] = value;
+                answersMap[key] = value;
+            }
+
+            let studentName = '';
+            let studentCode = '';
+            form.questions.forEach(q => {
+                if (q.text.includes('الاسم') || q.text.includes('اسم')) studentName = responseObj[q.id] || '';
+                if (q.text.includes('الكود') || q.text.includes('الجلوس')) studentCode = responseObj[q.id] || '';
+            });
+
+            if (!responses[currentAnsweringFormId]) {
+                responses[currentAnsweringFormId] = [];
+            }
+            responses[currentAnsweringFormId].push(responseObj);
+
+            deviceSubmissions[currentAnsweringFormId] = {
+                name: studentName,
+                code: studentCode,
+                answers: answersMap,
+                timestamp: responseObj.timestamp
+            };
+
+            localStorage.setItem('sigily_responses', JSON.stringify(responses));
+            localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+
+            showToast('تم تسجيل حضور بنجاح', 'success');
+            openResponseView(currentAnsweringFormId);
+        }
+
+        // Admin functions
+        function renderAdminDashboard() {
             const grid = document.getElementById('forms-grid');
             grid.innerHTML = '';
 
@@ -336,7 +618,7 @@
                 localStorage.setItem('sigily_forms', JSON.stringify(forms));
                 localStorage.setItem('sigily_responses', JSON.stringify(responses));
                 localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
-                renderDashboard();
+                renderAdminDashboard();
                 showToast('تم حذف النموذج بنجاح', 'info');
             }
         }
@@ -349,7 +631,7 @@
             
             addQuestion('text', 'الاسم الثلاثي');
             addQuestion('text', 'رقم الجلوس / الكود');
-            switchAdminView('builder');
+            switchView('admin-builder');
             showToast('تم فتح محرر النموذج الجديد', 'info');
         }
 
@@ -364,7 +646,7 @@
             container.innerHTML = '';
             
             form.questions.forEach(q => appendQuestionToDOM(q));
-            switchAdminView('builder');
+            switchView('admin-builder');
             showToast('تم تحميل النموذج للتعديل', 'info');
         }
 
@@ -464,13 +746,13 @@
 
             localStorage.setItem('sigily_forms', JSON.stringify(forms));
             showToast('تم حفظ النموذج بنجاح!', 'success');
-            switchAdminView('dashboard');
+            switchView('admin-dashboard');
         }
 
         function openShareModal(formId) {
             currentEditingFormId = formId;
-            const currentUrl = window.location.href;
-            const studentUrl = currentUrl.replace('admin.html', 'survey_heart_app.html') + `?f=${formId}`;
+            const currentUrl = window.location.href.split('?')[0];
+            const studentUrl = currentUrl + `?f=${formId}`;
             document.getElementById('share-link-input').value = studentUrl;
             document.getElementById('share-modal').classList.remove('hidden');
         }
@@ -488,7 +770,7 @@
 
         function viewAnalytics(formId) {
             currentAnalyticsFormId = formId;
-            switchAdminView('analytics');
+            switchView('admin-analytics');
             renderAnalytics();
         }
 
@@ -669,10 +951,15 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            const isAdmin = localStorage.getItem('sigily_is_admin') === 'true';
-            if (isAdmin) {
-                document.getElementById('admin-login-screen').classList.add('hidden');
-                switchAdminView('dashboard');
+            const urlParams = new URLSearchParams(window.location.search);
+            const formIdParam = urlParams.get('f');
+
+            if (formIdParam) {
+                openResponseView(formIdParam);
+            } else if (localStorage.getItem('sigily_is_admin') === 'true') {
+                switchView('admin-dashboard');
+            } else {
+                switchView('student-portal');
             }
         });
     </script>
