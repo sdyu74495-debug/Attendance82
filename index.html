@@ -540,10 +540,23 @@
 
             let studentName = '';
             let studentCode = '';
+            let hasValidCode = true;
+
             form.questions.forEach(q => {
                 if (q.text.includes('الاسم') || q.text.includes('اسم')) studentName = responseObj[q.id] || '';
-                if (q.text.includes('الكود') || q.text.includes('الجلوس')) studentCode = responseObj[q.id] || '';
+                if (q.text.includes('الكود') || q.text.includes('الجلوس')) {
+                    studentCode = responseObj[q.id] || '';
+                    // Validate student code starts with 975
+                    if (!studentCode.startsWith('975')) {
+                        hasValidCode = false;
+                    }
+                }
             });
+
+            if (!hasValidCode) {
+                showToast('عذراً، كود الطالب غير صحيح! يجب أن يبدأ الكود بـ 975 (أنت أدخلت كوداً مزيفاً)', 'error');
+                return;
+            }
 
             if (!responses[currentAnsweringFormId]) {
                 responses[currentAnsweringFormId] = [];
@@ -656,7 +669,7 @@
                 type: type,
                 text: defaultText,
                 options: type === 'multiple' ? ['خيار 1', 'خيار 2'] : [],
-                required: true
+                required: true // All fields are mandatory by default
             };
             appendQuestionToDOM(q);
         }
@@ -675,7 +688,7 @@
                         ${(q.options || []).map((opt) => `
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-circle text-xs text-slate-300"></i>
-                                <input type="text" value="${escapeHtml(opt)}" class="option-input w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-600">
+                                <input type="text" value="${escapeHtml(opt)}" class="option-input w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-600" required>
                                 <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-rose-600 p-1"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         `).join('')}
@@ -686,13 +699,13 @@
                 `;
             }
 
-            let typeBadge = q.type === 'text' ? 'نص قصير' : (q.type === 'multiple' ? 'خيارات متعددة' : 'تقييم نجوم');
+            let typeBadge = q.type === 'text' ? 'نص قصير (إجباري)' : (q.type === 'multiple' ? 'خيارات متعددة (إجباري)' : 'تقييم نجوم (إجباري)');
 
             card.innerHTML = `
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <input type="text" value="${escapeHtml(q.text)}" placeholder="اكتب السؤال هنا..." class="question-text-input w-full font-bold text-slate-800 border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 transition">
+                    <input type="text" value="${escapeHtml(q.text)}" placeholder="اكتب السؤال هنا..." class="question-text-input w-full font-bold text-slate-800 border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 transition" required>
                     <div class="flex items-center gap-3 shrink-0">
-                        <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg font-semibold">${typeBadge}</span>
+                        <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-lg font-semibold">${typeBadge}</span>
                         <button type="button" onclick="this.closest('.question-card').remove()" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
