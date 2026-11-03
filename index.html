@@ -266,19 +266,19 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Imports & Real-Time Cloud Sync Logic -->
+    <!-- Firebase SDK Imports & Global Public Cloud Sync Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sigily-default-app';
+        // Shared global collection path across all devices opening this app
+        const globalAppId = 'sigily_global_attendance_system_v1';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "mock", projectId: "mock" };
 
         let app, db, auth;
         let currentUser = null;
 
-        // Hybrid storage fallback + cloud
         window.forms = JSON.parse(localStorage.getItem('sigily_forms_local')) || [];
         window.responses = JSON.parse(localStorage.getItem('sigily_responses_local')) || {};
         window.deviceSubmissions = JSON.parse(localStorage.getItem('sigily_device_submissions')) || {};
@@ -296,22 +296,22 @@
                 }
                 currentUser = auth.currentUser;
 
-                // Real-time listener for public forms
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'forms'), (snapshot) => {
+                // Real-time listener for public forms across ALL devices
+                onSnapshot(collection(db, 'artifacts', globalAppId, 'public', 'data', 'forms'), (snapshot) => {
                     let cloudForms = [];
                     snapshot.forEach(docSnap => {
                         cloudForms.push({ id: docSnap.id, ...docSnap.data() });
                     });
-                    if (cloudForms.length > 0) {
+                    if (cloudForms.length > 0 || snapshot.size >= 0) {
                         window.forms = cloudForms;
                         localStorage.setItem('sigily_forms_local', JSON.stringify(window.forms));
                     }
                     if (typeof renderStudentPortal === 'function') renderStudentPortal();
                     if (typeof renderAdminDashboard === 'function') renderAdminDashboard();
-                }, (err) => { console.error(err); });
+                }, (err) => { console.error("Forms sync error:", err); });
 
-                // Real-time listener for responses
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'responses'), (snapshot) => {
+                // Real-time listener for responses across ALL devices
+                onSnapshot(collection(db, 'artifacts', globalAppId, 'public', 'data', 'responses'), (snapshot) => {
                     let cloudResponses = {};
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
@@ -319,12 +319,12 @@
                         if (!cloudResponses[formId]) cloudResponses[formId] = [];
                         cloudResponses[formId].push(data);
                     });
-                    if (Object.keys(cloudResponses).length > 0) {
+                    if (Object.keys(cloudResponses).length > 0 || snapshot.size >= 0) {
                         window.responses = cloudResponses;
                         localStorage.setItem('sigily_responses_local', JSON.stringify(window.responses));
                     }
                     if (typeof renderAnalytics === 'function') renderAnalytics();
-                }, (err) => { console.error(err); });
+                }, (err) => { console.error("Responses sync error:", err); });
 
             } catch(e) {
                 console.error("Firebase init error, using local fallback:", e);
@@ -345,7 +345,7 @@
 
             if (!currentUser) return;
             try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'forms', formData.id), formData);
+                await setDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', 'forms', formData.id), formData);
             } catch(e) {
                 console.error("Cloud save error:", e);
             }
@@ -362,7 +362,7 @@
 
             if (!currentUser) return;
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'forms', formId));
+                await deleteDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', 'forms', formId));
             } catch(e) {
                 console.error("Cloud delete error:", e);
             }
@@ -375,8 +375,8 @@
 
             if (!currentUser) return;
             try {
-                const respId = 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'responses', respId), {
+                const respId = 'resp_' + Date.now + '_' + Math.random().toString(36).substr(2, 5);
+                await setDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', 'responses', respId), {
                     formId: formId,
                     ...responseObj
                 });
@@ -865,7 +865,7 @@
             const formData = { id: currentEditingFormId, title, description, isOpen, questions };
             window.cloudSaveForm(formData);
 
-            showToast('تم حفظ النموذج ونشره بنجاح!', 'success');
+            showToast('تم حفظ النموذج ونشره سحابياً بنجاح!', 'success');
             switchView('admin-dashboard');
         }
 
