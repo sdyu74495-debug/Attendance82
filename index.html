@@ -1,4 +1,5 @@
 
+<!-- ... existing code ... -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -50,7 +51,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2" id="nav-actions">
-                <button type="button" onclick="openAdminModal()" class="px-4 py-2 text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-xl transition font-black flex items-center gap-2 shadow-lg cursor-pointer">
+                <button type="button" onclick="openAdminModal()" class="px-3.5 py-2 text-xs bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl transition font-black flex items-center gap-1.5 shadow-md">
                     <i class="fa-solid fa-lock"></i> لوحة الأدمن
                 </button>
             </div>
@@ -87,15 +88,13 @@
                         <i class="fa-solid fa-arrow-right ml-1"></i> العودة للمحاضرات
                     </button>
                 </div>
-                
-                <!-- Success Message Container -->
-                <div id="already-submitted-banner" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-900 p-8 rounded-2xl mb-4 text-center space-y-4">
-                    <div class="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center text-4xl mx-auto shadow-md">
+                <div id="already-submitted-banner" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-900 p-6 rounded-2xl mb-4 text-center space-y-3">
+                    <div class="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-3xl mx-auto shadow-md">
                         <i class="fa-solid fa-check"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-slate-800">تم تسجيل حضور بنجاح</h3>
+                    <h3 class="text-xl font-black text-slate-800">تم تسجيل حضور بنجاح</h3>
+                    <p class="text-slate-600 text-sm">لقد قمت بتسجيل حضورك في هذه المحاضرة مسبقاً، ولا يمكنك التسجيل مرة أخرى.</p>
                 </div>
-
                 <form id="public-form" onsubmit="submitResponse(event)" class="space-y-6">
                     <div id="response-questions-container" class="space-y-6">
                         <!-- Questions rendered for answering -->
@@ -111,24 +110,24 @@
         <section id="view-admin-dashboard" class="hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800">لوحة تحكم الأدمن</h2>
-                    <p class="text-slate-500 text-sm mt-1">أنشئ النماذج، تابع الحضور، وأدر بصمات الأجهزة.</p>
+                    <h2 class="text-2xl font-black text-slate-800">لوحة تحكم الأدمن (سِجِلّي)</h2>
+                    <p class="text-slate-500 text-sm mt-1">أنشئ النماذج، تابع الحضور، وأدر بصمات الأجهزة (متصل سحابياً).</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 border border-emerald-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> متصل بـ Firebase
+                    </span>
                     <button onclick="createNewForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition flex items-center gap-2">
                         <i class="fa-solid fa-plus-circle"></i> إنشاء نموذج جديد
                     </button>
-                    <button onclick="goStudentHome()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold transition">
-                        بوابة الطلاب
-                    </button>
-                    <button onclick="logoutAdmin()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl font-bold transition">
-                        إقفال الأدمن
+                    <button onclick="logoutAdmin()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold transition">
+                        خروج
                     </button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="forms-grid">
-                <!-- Dynamically populated via Cloud -->
+                <!-- Dynamically populated via JS -->
             </div>
         </section>
 
@@ -136,12 +135,12 @@
         <section id="view-admin-builder" class="hidden space-y-6">
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="w-full sm:w-1/2">
-                    <input type="text" id="builder-form-title" placeholder="عنوان النموذج (مثال: حضور محاضرة القانون المدني)" class="w-full text-xl sm:text-2xl font-black border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 text-slate-800 placeholder-slate-300 transition">
+                    <input type="text" id="builder-form-title" placeholder="عنوان النموذج (مثال: حضور محاضرة القانون المدني)" class="w-full text-xl sm:text-2xl font-black border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 text-slate-800 placeholder-slate-300 transition" required>
                     <input type="text" id="builder-form-desc" placeholder="وصف موجز أو تعليمات للطلاب..." class="w-full text-sm text-slate-500 border-b border-transparent focus:border-indigo-600 focus:outline-none py-1 mt-1 placeholder-slate-300 transition">
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                     <button onclick="saveForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-emerald-100 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-save"></i> حفظ النموذج
+                        <i class="fa-solid fa-save"></i> حفظ ونشر النموذج
                     </button>
                     <button onclick="switchView('admin-dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition">
                         رجوع
@@ -223,10 +222,27 @@
     </main>
 
     <!-- Footer Copyrights -->
-    <footer class="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/50 backdrop-blur space-y-1">
-        <p>جميع الحقوق محفوظة © 2026 - تم التطوير بواسطة <span class="font-bold text-indigo-600">عمر ربيع</span></p>
-        <p class="text-slate-600 font-semibold">رقم التواصل: <a href="tel:01553845026" class="text-indigo-600 hover:underline">01553845026</a></p>
+    <footer class="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/50 backdrop-blur">
+        <p>جميع الحقوق محفوظة © 2026 - تم التطوير بواسطة <span class="font-bold text-indigo-600">عمر ربيع</span> - للتواصل: <span class="font-bold text-indigo-600" dir="ltr">01553845026</span></p>
     </footer>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-password-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="bg-indigo-50 text-indigo-600 w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="text-lg font-black text-slate-800">لوحة الأدمن المؤمنة</h3>
+            <p class="text-xs text-slate-500">أدخل كلمة المرور الخاصة بالأدمن للوصول:</p>
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
+                <input type="password" id="modal-admin-pass" placeholder="كلمة المرور (Amr0155)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center text-base font-bold tracking-widest focus:outline-none focus:border-indigo-600">
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold transition text-sm">دخول</button>
+                    <button type="button" onclick="closeAdminModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold transition text-sm">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Share Modal / Popup -->
     <div id="share-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -235,7 +251,7 @@
                 <h3 class="text-lg font-black text-slate-800">مشاركة الرابط للطلاب</h3>
                 <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للطلاب لتسجيل الحضور مباشرة:</p>
+            <p class="text-sm text-slate-500">قم بنسخ الرابط التالي وأرسله للمستهدفين لتسجيل الحضور مباشرة:</p>
             <div class="flex items-center gap-2">
                 <input type="text" id="share-link-input" readonly class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-600 focus:outline-none">
                 <button onclick="copyShareLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shrink-0">نسخ</button>
@@ -246,35 +262,22 @@
         </div>
     </div>
 
-    <!-- Admin Password Modal -->
-    <div id="admin-password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5 text-center">
-            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold">
-                <i class="fa-solid fa-key"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-black text-slate-800">تسجيل دخول الأدمن</h3>
-                <p class="text-slate-500 text-xs mt-1">أدخل كلمة المرور للوصول إلى لوحة التحكم</p>
-            </div>
-            <form onsubmit="verifyAdminPassword(event)" class="space-y-4">
-                <input type="password" id="modal-admin-pass" placeholder="كلمة المرور" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center text-lg font-bold tracking-widest focus:outline-none focus:border-indigo-600 transition">
-                <div class="flex gap-2">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition text-sm">دخول</button>
-                    <button type="button" onclick="closeAdminModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold transition text-sm">إلغاء</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Firebase SDK Imports & Global Public Cloud Sync Logic -->
+    <!-- Firebase SDK & Real-Time Cloud Sync -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Shared global collection path across all devices opening this app
-        const globalAppId = 'sigily_global_attendance_system_v1';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "mock", projectId: "mock" };
+        const globalAppId = 'sigily_global_attendance_system_v2';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAac5HI@SqSFT3_1_UlbXOt6-q1BydEoRU",
+            authDomain: "attendance-6ac3f.firebaseapp.com",
+            projectId: "attendance-6ac3f",
+            storageBucket: "attendance-6ac3f.firebasestorage.app",
+            messagingSenderId: "919783579542",
+            appId: "1:919783579542:web:c78a4d562dcfad22bc07b7"
+        };
 
         let app, db, auth;
         let currentUser = null;
@@ -296,7 +299,6 @@
                 }
                 currentUser = auth.currentUser;
 
-                // Real-time listener for public forms across ALL devices
                 onSnapshot(collection(db, 'artifacts', globalAppId, 'public', 'data', 'forms'), (snapshot) => {
                     let cloudForms = [];
                     snapshot.forEach(docSnap => {
@@ -310,7 +312,6 @@
                     if (typeof renderAdminDashboard === 'function') renderAdminDashboard();
                 }, (err) => { console.error("Forms sync error:", err); });
 
-                // Real-time listener for responses across ALL devices
                 onSnapshot(collection(db, 'artifacts', globalAppId, 'public', 'data', 'responses'), (snapshot) => {
                     let cloudResponses = {};
                     snapshot.forEach(docSnap => {
@@ -334,7 +335,6 @@
         initFirebase();
 
         window.cloudSaveForm = async function(formData) {
-            // Update local instantly
             const idx = window.forms.findIndex(f => f.id === formData.id);
             if (idx >= 0) window.forms[idx] = formData;
             else window.forms.push(formData);
@@ -375,7 +375,7 @@
 
             if (!currentUser) return;
             try {
-                const respId = 'resp_' + Date.now + '_' + Math.random().toString(36).substr(2, 5);
+                const respId = 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                 await setDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', 'responses', respId), {
                     formId: formId,
                     ...responseObj
@@ -690,7 +690,6 @@
             openResponseView(currentAnsweringFormId);
         }
 
-        // Admin functions
         function renderAdminDashboard() {
             const grid = document.getElementById('forms-grid');
             if (!grid) return;
@@ -865,7 +864,7 @@
             const formData = { id: currentEditingFormId, title, description, isOpen, questions };
             window.cloudSaveForm(formData);
 
-            showToast('تم حفظ النموذج ونشره سحابياً بنجاح!', 'success');
+            showToast('تم حفظ ونشر النموذج سحابياً بنجاح!', 'success');
             switchView('admin-dashboard');
         }
 
