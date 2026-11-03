@@ -34,7 +34,7 @@
     <!-- Admin Supervisor Notification Banner -->
     <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-center text-xs font-bold tracking-wide shadow-inner flex items-center justify-center gap-2">
         <i class="fa-solid fa-shield-halved text-amber-400"></i>
-        <span>هذا التطبيق تحت إشراف أدمن الدفعة طه الجيار</span>
+        <span>هذا التطبيق تحت إشراف أدمن الدفعة طه الجيار و عمرو ربيع</span>
     </div>
 
     <!-- Header Navigation -->
@@ -128,7 +128,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="forms-grid">
-                <!-- Dynamically populated via JS -->
+                <!-- Dynamically populated via Cloud -->
             </div>
         </section>
 
@@ -223,8 +223,9 @@
     </main>
 
     <!-- Footer Copyrights -->
-    <footer class="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/50 backdrop-blur">
-        <p>جميع الحقوق محفوظة © 2026 - تم التطوير بواسطة <span class="font-bold text-indigo-600">عمر ربيع آدمن الفرقة الثانية</span></p>
+    <footer class="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/50 backdrop-blur space-y-1">
+        <p>جميع الحقوق محفوظة © 2026 - تم التطوير بواسطة <span class="font-bold text-indigo-600">عمر ربيع</span></p>
+        <p class="text-slate-600 font-semibold">رقم التواصل: <a href="tel:01553845026" class="text-indigo-600 hover:underline">01553845026</a></p>
     </footer>
 
     <!-- Share Modal / Popup -->
@@ -265,11 +266,86 @@
         </div>
     </div>
 
+    <!-- Firebase SDK Imports & Real-Time Cloud Sync Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sigily-default-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "mock", projectId: "mock" };
+
+        let app, db, auth;
+        let currentUser = null;
+
+        window.forms = [];
+        window.responses = {};
+        window.deviceSubmissions = JSON.parse(localStorage.getItem('sigily_device_submissions')) || {};
+
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+
+                // Real-time listener for public forms & lectures
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'forms'), (snapshot) => {
+                    window.forms = [];
+                    snapshot.forEach(docSnap => {
+                        window.forms.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    if (typeof renderStudentPortal === 'function') renderStudentPortal();
+                    if (typeof renderAdminDashboard === 'function') renderAdminDashboard();
+                }, (err) => { console.error(err); });
+
+                // Real-time listener for responses
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'responses'), (snapshot) => {
+                    window.responses = {};
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const formId = data.formId;
+                        if (!window.responses[formId]) window.responses[formId] = [];
+                        window.responses[formId].push(data);
+                    });
+                    if (typeof renderAnalytics === 'function') renderAnalytics();
+                }, (err) => { console.error(err); });
+
+            } catch(e) {
+                console.error("Firebase init error:", e);
+            }
+        }
+
+        initFirebase();
+
+        window.cloudSaveForm = async function(formData) {
+            if (!currentUser) return;
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'forms', formData.id), formData);
+        }
+
+        window.cloudDeleteForm = async function(formId) {
+            if (!currentUser) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'forms', formId));
+        }
+
+        window.cloudSubmitResponse = async function(formId, responseObj) {
+            if (!currentUser) return;
+            const respId = 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'responses', respId), {
+                formId: formId,
+                ...responseObj
+            });
+        }
+    </script>
+
     <!-- JavaScript Core Logic -->
     <script>
-        let forms = JSON.parse(localStorage.getItem('sigily_forms')) || [];
-        let responses = JSON.parse(localStorage.getItem('sigily_responses')) || {};
-        let deviceSubmissions = JSON.parse(localStorage.getItem('sigily_device_submissions')) || {};
         let currentEditingFormId = null;
         let currentAnsweringFormId = null;
         let currentAnalyticsFormId = null;
@@ -404,9 +480,10 @@
 
         function renderStudentPortal() {
             const grid = document.getElementById('student-lectures-grid');
+            if (!grid) return;
             grid.innerHTML = '';
 
-            const activeForms = forms.filter(f => f.isOpen !== false);
+            const activeForms = (window.forms || []).filter(f => f.isOpen !== false);
 
             if (activeForms.length === 0) {
                 grid.innerHTML = `
@@ -441,9 +518,9 @@
         }
 
         function openResponseView(formId) {
-            const form = forms.find(f => f.id === formId);
+            const form = (window.forms || []).find(f => f.id === formId);
             if (!form) {
-                showToast('المحاضرة غير موجودة', 'error');
+                showToast('المحاضرة غير موجودة أو جارٍ التحميل...', 'info');
                 return;
             }
             
@@ -454,7 +531,7 @@
             const container = document.getElementById('response-questions-container');
             container.innerHTML = '';
 
-            const submittedRecord = deviceSubmissions[formId];
+            const submittedRecord = window.deviceSubmissions[formId];
             const alreadySubmittedBanner = document.getElementById('already-submitted-banner');
             const submitBtn = document.getElementById('submit-btn');
 
@@ -514,7 +591,7 @@
 
         function submitResponse(e) {
             e.preventDefault();
-            const form = forms.find(f => f.id === currentAnsweringFormId);
+            const form = (window.forms || []).find(f => f.id === currentAnsweringFormId);
             if (!form) return;
 
             if (form.isOpen === false) {
@@ -522,7 +599,7 @@
                 return;
             }
 
-            if (deviceSubmissions[currentAnsweringFormId]) {
+            if (window.deviceSubmissions[currentAnsweringFormId]) {
                 showToast('لقد قمت بتسجيل الحضور مسبقاً من هذا الجهاز!', 'error');
                 openResponseView(currentAnsweringFormId);
                 return;
@@ -546,7 +623,6 @@
                 if (q.text.includes('الاسم') || q.text.includes('اسم')) studentName = responseObj[q.id] || '';
                 if (q.text.includes('الكود') || q.text.includes('الجلوس')) {
                     studentCode = responseObj[q.id] || '';
-                    // Validate student code starts with 975
                     if (!studentCode.startsWith('975')) {
                         hasValidCode = false;
                     }
@@ -558,20 +634,15 @@
                 return;
             }
 
-            if (!responses[currentAnsweringFormId]) {
-                responses[currentAnsweringFormId] = [];
-            }
-            responses[currentAnsweringFormId].push(responseObj);
+            window.cloudSubmitResponse(currentAnsweringFormId, responseObj);
 
-            deviceSubmissions[currentAnsweringFormId] = {
+            window.deviceSubmissions[currentAnsweringFormId] = {
                 name: studentName,
                 code: studentCode,
                 answers: answersMap,
                 timestamp: responseObj.timestamp
             };
-
-            localStorage.setItem('sigily_responses', JSON.stringify(responses));
-            localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+            localStorage.setItem('sigily_device_submissions', JSON.stringify(window.deviceSubmissions));
 
             showToast('تم تسجيل حضور بنجاح', 'success');
             openResponseView(currentAnsweringFormId);
@@ -580,9 +651,11 @@
         // Admin functions
         function renderAdminDashboard() {
             const grid = document.getElementById('forms-grid');
+            if (!grid) return;
             grid.innerHTML = '';
 
-            if (forms.length === 0) {
+            const list = window.forms || [];
+            if (list.length === 0) {
                 grid.innerHTML = `
                     <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-100">
                         <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
@@ -592,8 +665,8 @@
                 return;
             }
 
-            forms.forEach(form => {
-                const respCount = (responses[form.id] || []).length;
+            list.forEach(form => {
+                const respCount = ((window.responses || {})[form.id] || []).length;
                 const card = document.createElement('div');
                 card.className = 'bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition flex flex-col justify-between gap-4';
                 card.innerHTML = `
@@ -625,12 +698,7 @@
 
         function deleteForm(formId) {
             if (confirm('هل أنت متأكد من حذف هذا النموذج نهائياً؟')) {
-                forms = forms.filter(f => f.id !== formId);
-                delete responses[formId];
-                delete deviceSubmissions[formId];
-                localStorage.setItem('sigily_forms', JSON.stringify(forms));
-                localStorage.setItem('sigily_responses', JSON.stringify(responses));
-                localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+                window.cloudDeleteForm(formId);
                 renderAdminDashboard();
                 showToast('تم حذف النموذج بنجاح', 'info');
             }
@@ -649,7 +717,7 @@
         }
 
         function editForm(formId) {
-            const form = forms.find(f => f.id === formId);
+            const form = (window.forms || []).find(f => f.id === formId);
             if (!form) return;
             currentEditingFormId = form.id;
             document.getElementById('builder-form-title').value = form.title || '';
@@ -669,7 +737,7 @@
                 type: type,
                 text: defaultText,
                 options: type === 'multiple' ? ['خيار 1', 'خيار 2'] : [],
-                required: true // All fields are mandatory by default
+                required: true
             };
             appendQuestionToDOM(q);
         }
@@ -749,16 +817,14 @@
                 questions.push({ id, type, text, options, required: true });
             });
 
-            const existingIndex = forms.findIndex(f => f.id === currentEditingFormId);
-            const existingForm = existingIndex >= 0 ? forms[existingIndex] : null;
+            const existingIndex = (window.forms || []).findIndex(f => f.id === currentEditingFormId);
+            const existingForm = existingIndex >= 0 ? window.forms[existingIndex] : null;
             const isOpen = existingForm ? (existingForm.isOpen !== undefined ? existingForm.isOpen : true) : true;
             
             const formData = { id: currentEditingFormId, title, description, isOpen, questions };
-            if (existingIndex >= 0) forms[existingIndex] = formData;
-            else forms.push(formData);
+            window.cloudSaveForm(formData);
 
-            localStorage.setItem('sigily_forms', JSON.stringify(forms));
-            showToast('تم حفظ النموذج بنجاح!', 'success');
+            showToast('تم حفظ النموذج ونشره سحابياً بنجاح!', 'success');
             switchView('admin-dashboard');
         }
 
@@ -788,20 +854,20 @@
         }
 
         function toggleFormStatus() {
-            const form = forms.find(f => f.id === currentAnalyticsFormId);
+            const form = (window.forms || []).find(f => f.id === currentAnalyticsFormId);
             if (!form) return;
             form.isOpen = form.isOpen === false ? true : false;
-            localStorage.setItem('sigily_forms', JSON.stringify(forms));
+            window.cloudSaveForm(form);
             renderAnalytics();
             showToast(form.isOpen ? 'تم فتح النموذج لاستقبال الردود' : 'تم إغلاق النموذج بنجاح', form.isOpen ? 'success' : 'info');
         }
 
         function renderAnalytics() {
-            const form = forms.find(f => f.id === currentAnalyticsFormId);
+            const form = (window.forms || []).find(f => f.id === currentAnalyticsFormId);
             if (!form) return;
 
             document.getElementById('analytics-title').innerText = `ردود: ${form.title}`;
-            const formResponses = responses[form.id] || [];
+            const formResponses = (window.responses || {})[form.id] || [];
             document.getElementById('stat-total-responses').innerText = formResponses.length;
 
             const isOpen = form.isOpen !== false;
@@ -875,19 +941,19 @@
 
         function unlockStudentDevice(formId, code) {
             if (confirm(`هل أنت متأكد من فك حظر بصمة الجهاز للطالب صاحب الكود: ${code}?`)) {
-                for (let fp in deviceSubmissions) {
-                    if (deviceSubmissions[fp].code === code) delete deviceSubmissions[fp];
+                for (let fp in window.deviceSubmissions) {
+                    if (window.deviceSubmissions[fp].code === code) delete window.deviceSubmissions[fp];
                 }
-                localStorage.setItem('sigily_device_submissions', JSON.stringify(deviceSubmissions));
+                localStorage.setItem('sigily_device_submissions', JSON.stringify(window.deviceSubmissions));
                 showToast(`تم فك حظر البصمة للطالب ${code} بنجاح`, 'success');
                 renderAnalytics();
             }
         }
 
         function printResponsesReport() {
-            const form = forms.find(f => f.id === currentAnalyticsFormId);
+            const form = (window.forms || []).find(f => f.id === currentAnalyticsFormId);
             if (!form) return;
-            const formResponses = responses[form.id] || [];
+            const formResponses = (window.responses || {})[form.id] || [];
 
             let printWindow = window.open('', '_blank');
             let html = `
@@ -906,7 +972,7 @@
                 </head>
                 <body>
                     <h2>${escapeHtml(form.title)}</h2>
-                    <p>إجمالي الحضور: ${formResponses.length} طالب | تحت إشراف أدمن الدفعة طه الجيار</p>
+                    <p>إجمالي الحضور: ${formResponses.length} طالب | تحت إشراف أدمن الدفعة طه الجيار و عمرو ربيع</p>
                     <table>
                         <thead>
                             <tr>
@@ -929,7 +995,7 @@
                 html += `<tr><td>${i + 1}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(code)}</td><td>${escapeHtml(resp.timestamp || '-')}</td></tr>`;
             });
 
-            html += `</tbody></table><div class="footer">تم استخراج التقرير بواسطة سِجِلّي - تطوير: عمر ربيع آدمن الفرقة الثانية</div></body></html>`;
+            html += `</tbody></table><div class="footer">تم استخراج التقرير بواسطة سِجِلّي - تحت إشراف طه الجيار و عمرو ربيع (01553845026)</div></body></html>`;
             printWindow.document.write(html);
             printWindow.document.close();
             printWindow.focus();
@@ -937,9 +1003,9 @@
         }
 
         function exportToCSV() {
-            const form = forms.find(f => f.id === currentAnalyticsFormId);
+            const form = (window.forms || []).find(f => f.id === currentAnalyticsFormId);
             if (!form) return;
-            const formResponses = responses[form.id] || [];
+            const formResponses = (window.responses || {})[form.id] || [];
 
             let csvContent = "\uFEFFم,اسم الطالب,الكود,وقت التسجيل\n";
             formResponses.forEach((resp, i) => {
@@ -967,13 +1033,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             const formIdParam = urlParams.get('f');
 
-            if (formIdParam) {
-                openResponseView(formIdParam);
-            } else if (localStorage.getItem('sigily_is_admin') === 'true') {
-                switchView('admin-dashboard');
-            } else {
-                switchView('student-portal');
-            }
+            setTimeout(() => {
+                if (formIdParam) {
+                    openResponseView(formIdParam);
+                } else if (localStorage.getItem('sigily_is_admin') === 'true') {
+                    switchView('admin-dashboard');
+                } else {
+                    switchView('student-portal');
+                }
+            }, 600);
         });
     </script>
 </body>
